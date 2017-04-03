@@ -101,58 +101,57 @@ module Enumerable
 end
 
 module Enumerable
-  def my_map # for proc
+  def my_map(*arg)
     new_arr = []
-    if block_given?
-      self.my_each {|i| new_arr << yield(i)}
-      new_arr
-    else
-      self.to_enum
-    end
+#    if arg.length == 1 #i.e. should be a Proc
+#      self.my_map(arg)
+#     if arg[0].respond_to? :call #same as arg[0].is_a? Proc
+#        self.my_each {|i| new_arr << arg[0].call(i)}
+#      else
+#        self.to_enum
+#      end
+#    else
+      if block_given?
+        self.my_each {|i| new_arr << yield(i)}
+        new_arr
+      else
+        self.to_enum
+      end
+#    end
   end
 end
 
 module Enumerable
-  def my_inject(a = nil, b = nil)
+  def my_inject(*input)
     arr = self.to_a
-    if block_given?
-      memo = (a == nil ? arr[0] : a) #if no arg, set initial value to first element
+    if block_given? or input.length == 0 #if no input, then it must include a block (or else, display 'no block given' error)
+      memo = (input.length == 0 ? arr[0] : input[0]) #if no arg, set initial value to first element; else set to provided intiial value
       i = 0
       arr.my_each do
         memo = yield(memo, arr[i+1]) if (i < arr.length - 1) #prevent iterating the last item
         i += 1
       end
       memo # return result
-      if b != nil # if there is block AND 2 args, run the 2nd arg (ie. symbol) after completing the block
-        arr.my_inject(memo , b)
+      if input.length == 2 # if there is block AND 2 args, run the 2nd arg (ie. symbol) after completing the block
+        arr.my_inject(memo , input[1])
       end
     else #no block
-      if a == nil && b == nil #no arg and block
-        "LocalJumpError: no block given"
-      elsif b == nil #one arg
-          if a.is_a? (Symbol)# if 1 arg, check input is symbol
-            memo = arr[0] #set initial value to first element
-            i = 0
-            arr.my_each do
-              memo = memo.send(a, arr[i+1]) if (i < arr.length - 1) #prevent iterating the last item
-              i += 1
-            end
-            memo #result
-          else
-            "TypeError: #{a} is not a symbol (nor a string)"
-          end
-      else # two args
-        if b.is_a? (Symbol) #check 2nd arg is symbol
-          memo = a
+      if input.length == 1 #one arg, i.e. Symbol
+          memo = arr[0] #set initial value to first element
           i = 0
           arr.my_each do
-            memo = memo.send(b, arr[i]) if (i < arr.length) #since there is inital value, the first/last element needs to be evaluated
+            memo = memo.send(input[0], arr[i+1]) if (i < arr.length - 1) #prevent iterating the last item
+            i += 1
+          end
+          memo #result
+      else # two args; i.e. first input: initial value, second input: Symbol
+          memo = input[0]
+          i = 0
+          arr.my_each do
+            memo = memo.send(input[1], arr[i]) if (i < arr.length) #since there is inital value, the first/last element needs to be evaluated
             i += 1
           end
           memo
-        else
-          "Error: #{b} is not a symbol (nor a string)"
-        end
       end
     end
   end
