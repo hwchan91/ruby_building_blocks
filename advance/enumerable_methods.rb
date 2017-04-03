@@ -89,35 +89,16 @@ module Enumerable
 end
 
 module Enumerable
-  def my_map # for block
+  def my_map(&a_proc)
     new_arr = []
-    if block_given?
-      self.my_each {|i| new_arr << yield(i)}
-      new_arr
-    else
-      self.to_enum
-    end
-  end
-end
-
-module Enumerable
-  def my_map(*arg)
-    new_arr = []
-#    if arg.length == 1 #i.e. should be a Proc
-#      self.my_map(arg)
-#     if arg[0].respond_to? :call #same as arg[0].is_a? Proc
-#        self.my_each {|i| new_arr << arg[0].call(i)}
-#      else
-#        self.to_enum
-#      end
-#    else
-      if block_given?
+    if a_proc #i.e. if Proc given
+        self.my_each {|i| new_arr << a_proc.call(i)}
+    elsif block_given?
         self.my_each {|i| new_arr << yield(i)}
-        new_arr
-      else
-        self.to_enum
-      end
-#    end
+    else
+      new_arr = self.to_enum
+    end
+    new_arr
   end
 end
 
